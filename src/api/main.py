@@ -7,14 +7,15 @@ import numpy as np
 import tempfile
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.responses import StreamingResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from inference import detect
 from utils.draw import draw_boxes
 
 # 1. Instancia a app
-app = FastAPI(title="MCP Server – Gato vs Cão", version="0.1.0")
+app = FastAPI(title="MCP Server – Gato vs Cão", version="0.1.0", openapi_url="/openapi.json", docs_url="/docs")
+
 
 # 2. Monta a pasta .well-known para servir manifestos e logo
 app.mount(
@@ -22,6 +23,12 @@ app.mount(
     StaticFiles(directory=".well-known", html=False),
     name="well-known"
 )
+
+
+@app.get("/", include_in_schema=False)
+async def root():
+    return RedirectResponse(url="/docs")
+
 
 @app.post("/detect-image", summary="Detetar e anotar imagem")
 async def detect_image(file: UploadFile = File(...)):
