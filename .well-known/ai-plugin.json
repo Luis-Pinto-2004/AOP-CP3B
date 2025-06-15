@@ -7,10 +7,10 @@
   "auth": { "type": "none" },
   "api": {
     "type": "openapi",
-    "url": "https://https://slimy-chefs-count.loca.lt/openapi.json",
+    "url": "https://https://AOP-CP3B-mcp-server.onrender.com/openapi.json",
     "is_user_authenticated": false
     },
-    "logo_url": "https://slimy-chefs-count.loca.lt/.well-known/logo.png",
+    "logo_url": "https://AOP-CP3B-mcp-server.onrender.com/.well-known/logo.png",
     "contact_email": "teu.email@exemplo.com",
     "legal_info_url": "https://tua-empresa.pt/legal"
 }
