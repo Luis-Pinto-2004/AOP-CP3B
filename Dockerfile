@@ -1,30 +1,31 @@
-# ---- Etapa 1 (builder) ----
+##############################################
+# == STAGE 1: Builder (com PyTorch pré-instalado)==
+##############################################
 FROM pytorch/pytorch:2.0.0-cuda11.7-cudnn8-runtime AS builder
 WORKDIR /app
 
-# Copia só o requirements e instala primeiro
+# 1) só requirements.txt
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia o resto da app
+# 2) copia o resto do código + pesos
 COPY src/       ./src/
 COPY .well-known/ ./.well-known/
 COPY yolov8n.pt   ./
 
-# ---- Etapa 2 (runtime) ----
+##############################################
+# == STAGE 2: Runtime (mais leve) ==
+##############################################
 FROM nvidia/cuda:11.7.1-runtime-ubuntu22.04
 WORKDIR /app
 
-# Dependências do sistema (ex: OpenCV)
+# instala dependências de SO (ex: libgl1 para OpenCV)
 RUN apt-get update && \
     apt-get install -y python3 python3-pip libgl1 && \
     rm -rf /var/lib/apt/lists/*
 
-# Copia tudo do builder
+# copia tudo do builder para o runtime
 COPY --from=builder /app /app
 
 EXPOSE 8000
-CMD ["uvicorn", "api.main:app", \
-     "--host", "0.0.0.0", \
-     "--port", "8000", \
-     "--app-dir", "src"]
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000", "--app-dir", "src"]
