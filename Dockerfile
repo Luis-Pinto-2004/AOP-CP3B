@@ -1,30 +1,25 @@
-########################################
-# STAGE 1: instala tudo (builder)     #
-########################################
-FROM pytorch/pytorch:2.0.0-cuda11.7-cudnn8-runtime AS builder
-WORKDIR /app
+# Dockerfile
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY src/         ./src/
-COPY .well-known/ ./.well-known/
-COPY yolov8n.pt   ./
-
-########################################
-# STAGE 2: runtime mais leve (CPU-only)#
-########################################
+# 1) Base: Python 3.10 slim
 FROM python:3.10-slim
+
 WORKDIR /app
 
+# 2) Dependências de SO (OpenCV headless)
 RUN apt-get update && \
     apt-get install -y libgl1 && \
     rm -rf /var/lib/apt/lists/*
 
-# Copia tanto o código como as libs instaladas no builder:
-COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
-COPY --from=builder /app                /app
+# 3) Copia requirements e instala tudo (inclui fastapi, uvicorn, ultralytics, etc.)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 4) Copia aplicação, manifesto e pesos
+COPY src/           ./src/
+COPY .well-known/   ./.well-known/
+COPY yolov8n.pt     ./
 
 EXPOSE 8000
 
+# 5) Comando de arranque
 CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000", "--app-dir", "src"]
