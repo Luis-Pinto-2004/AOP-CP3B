@@ -14,7 +14,7 @@ def detect(frame: np.ndarray):
     detections = []
     for *box, conf, cls in results.boxes.data.tolist():
         if int(cls) in (15, 16):  # 15=gato, 16=cão no COCO
-            label = 'gato' if int(cls)==15 else 'cão'
+            label = 'gato' if int(cls)==15 else 'cao'
             detections.append({
                 'box': box,
                 'label': label,

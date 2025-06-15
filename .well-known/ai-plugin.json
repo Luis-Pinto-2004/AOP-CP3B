@@ -1,0 +1,16 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "MCP Detector GatoCão",
+  "name_for_model": "mcp_detector",
+  "description_for_human": "Deteta e anota gatos e cães em imagens e vídeos.",
+  "description_for_model": "Plugin para enviar imagens/vídeos e receber bounding-boxes de gato vs cão com probabilidades.",
+  "auth": { "type": "none" },
+  "api": {
+    "type": "openapi",
+    "url": "https://https://slimy-chefs-count.loca.lt/openapi.json",
+    "is_user_authenticated": false
+    },
+    "logo_url": "https://slimy-chefs-count.loca.lt/.well-known/logo.png",
+    "contact_email": "teu.email@exemplo.com",
+    "legal_info_url": "https://tua-empresa.pt/legal"
+}
