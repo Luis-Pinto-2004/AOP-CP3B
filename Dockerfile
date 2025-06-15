@@ -1,30 +1,30 @@
 ##############################################
-# == STAGE 1: Builder (com PyTorch pré-instalado)==
+# == STAGE 1: Builder (com PyTorch pré-instalado) ==
 ##############################################
 FROM pytorch/pytorch:2.0.0-cuda11.7-cudnn8-runtime AS builder
 WORKDIR /app
 
-# 1) só requirements.txt
+# 1) copia apenas o requirements corrigido
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 2) copia o resto do código + pesos
-COPY src/       ./src/
-COPY .well-known/ ./.well-known/
-COPY yolov8n.pt   ./
+# 2) copia o código-fonte, o manifesto e o logo, e os pesos
+COPY src/           ./src/
+COPY .well-known/   ./.well-known/
+COPY yolov8n.pt     ./
 
 ##############################################
-# == STAGE 2: Runtime (mais leve) ==
+# == STAGE 2: Runtime mais leve ==
 ##############################################
 FROM nvidia/cuda:11.7.1-runtime-ubuntu22.04
 WORKDIR /app
 
-# instala dependências de SO (ex: libgl1 para OpenCV)
+# instala dependências de SO (OpenCV headless)
 RUN apt-get update && \
     apt-get install -y python3 python3-pip libgl1 && \
     rm -rf /var/lib/apt/lists/*
 
-# copia tudo do builder para o runtime
+# traz tudo do builder
 COPY --from=builder /app /app
 
 EXPOSE 8000
