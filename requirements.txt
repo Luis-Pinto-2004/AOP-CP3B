@@ -1,0 +1,6 @@
+mcp
+uvicorn
+fastapi
+ultralytics
+opencv-python
+numpy
