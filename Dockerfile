@@ -1,25 +1,28 @@
-# Dockerfile
+# Dockerfile (única etapa – CPU-only)
 
-# 1) Base: Python 3.10 slim
 FROM python:3.10-slim
 
 WORKDIR /app
 
-# 2) Dependências de SO (OpenCV headless)
+# 1) Instala dependências de SO para OpenCV
 RUN apt-get update && \
-    apt-get install -y libgl1 && \
+    apt-get install -y \
+      libgl1 \
+      libglib2.0-0 \
+      libsm6 \
+      libxext6 \
+      libxrender1 && \
     rm -rf /var/lib/apt/lists/*
 
-# 3) Copia requirements e instala tudo (inclui fastapi, uvicorn, ultralytics, etc.)
+# 2) Copia e instala as dependências Python
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 4) Copia aplicação, manifesto e pesos
+# 3) Copia a app, manifesto e pesos
 COPY src/           ./src/
 COPY .well-known/   ./.well-known/
 COPY yolov8n.pt     ./
 
+# 4) Expõe a porta do Uvicorn e arranca
 EXPOSE 8000
-
-# 5) Comando de arranque
 CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000", "--app-dir", "src"]
