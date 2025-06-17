@@ -14,8 +14,12 @@ from inference import detect
 from utils.draw import draw_boxes
 
 # 1. Instancia a app
-app = FastAPI(title="MCP Server – Gato vs Cão", version="0.1.0", openapi_url="/openapi.json", docs_url="/docs")
-
+app = FastAPI(
+    title="MCP Server – Gato vs Cão",
+    version="0.1.0",
+    openapi_url="/openapi.json",
+    docs_url="/docs"
+)
 
 # 2. Monta a pasta .well-known para servir manifestos e logo
 app.mount(
@@ -23,7 +27,6 @@ app.mount(
     StaticFiles(directory=".well-known", html=False),
     name="well-known"
 )
-
 
 @app.get("/", include_in_schema=False)
 async def root():
@@ -53,7 +56,7 @@ async def detect_image(file: UploadFile = File(...)):
 def process_video(input_path: str, output_path: str):
     """
     Lê um vídeo de input_path, anota frame-a-frame
-    e grava o resultado em output_path.
+    usando skip + redução de resolução e grava o resultado em output_path.
     """
     cap = cv2.VideoCapture(input_path)
     if not cap.isOpened():
@@ -65,13 +68,45 @@ def process_video(input_path: str, output_path: str):
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
     out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+
+    # parâmetros de performance
+    skip = 2                # processar 1 em cada 2 frames
+    target_w = 640          # largura para inferência
+    target_h = int(height * target_w / width)
+
+    cached_detections = []
+    frame_id = 0
+
     while True:
         ret, frame = cap.read()
         if not ret:
             break
-        detections = detect(frame)
-        annotated  = draw_boxes(frame, detections)
+
+        # só faz inferência a cada 'skip' frames
+        if frame_id % skip == 0:
+            # redimensiona para acelerar
+            small = cv2.resize(frame, (target_w, target_h))
+            dets_small = detect(small)
+            # escala detecções de volta ao tamanho original
+            scaled = []
+            sx = width / target_w
+            sy = height / target_h
+            for d in dets_small:
+                x1, y1, x2, y2 = d['box']
+                scaled.append({
+                    'box': [
+                        int(x1 * sx), int(y1 * sy),
+                        int(x2 * sx), int(y2 * sy)
+                    ],
+                    'label': d['label'],
+                    'conf': d['conf']
+                })
+            cached_detections = scaled
+
+        # desenha caixas (mesmo nos frames em que não inferimos)
+        annotated = draw_boxes(frame, cached_detections)
         out.write(annotated)
+        frame_id += 1
 
     cap.release()
     out.release()
